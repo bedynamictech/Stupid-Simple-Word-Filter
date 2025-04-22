@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Stupid Simple Word Filter
-Description: Easily manage prohibited words and phrases in comments or forms.
+Description: Easily manage prohibited words and phrases in Gutenberg comments or forms.
 Version: 1.0
 Author: Dynamic Technologies
 Author URI: http://bedynamic.tech
