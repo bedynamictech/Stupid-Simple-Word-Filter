@@ -5,6 +5,7 @@ Description: Easily manage prohibited words and phrases in Gutenberg comments or
 Version: 1.0.2
 Author: Dynamic Technologies
 Author URI: http://bedynamic.tech
+PLugin URI: https://github.com/bedynamictech/Stupid-Simple-Word-Filter
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 */
@@ -21,6 +22,7 @@ function sswf_add_menu() {
         'Stupid Simple',
         'manage_options',
         'stupidsimple',
+        'sswf_settings_page_content',  // ← callback and icon parameters were swapped
         'dashicons-hammer',
         99
     );
@@ -43,40 +45,42 @@ function sswf_settings_page_content() {
         <h1>Word Filter</h1>
 
         <?php
-        // Handle form submission for adding a word
-        if ( isset( $_POST['sswf_word_to_add'] ) && check_admin_referer( 'sswf_save_words', 'sswf_nonce' ) ) {
+        // Add a word
+        if ( isset( $_POST['sswf_word_to_add'] ) ) {
+            check_admin_referer( 'sswf_save_words', 'sswf_nonce' );
             $new_word = sanitize_text_field( $_POST['sswf_word_to_add'] );
             $prohibited_words = get_option( 'sswf_prohibited_words', array() );
 
-            // Add the new word only if it doesn't already exist
-            if ( ! in_array( $new_word, $prohibited_words ) ) {
+            if ( $new_word && ! in_array( $new_word, $prohibited_words, true ) ) {
                 $prohibited_words[] = $new_word;
                 update_option( 'sswf_prohibited_words', $prohibited_words );
                 echo '<div class="updated"><p>Word or Phrase Added!</p></div>';
             } else {
-                echo '<div class="error"><p>This word/phrase is already in the list.</p></div>';
+                echo '<div class="error"><p>This word/phrase is already in the list or empty.</p></div>';
             }
         }
 
-        // Handle form submission for deleting a word
-        if ( isset( $_POST['word_to_delete'] ) && check_admin_referer( 'sswf_save_words', 'sswf_nonce' ) ) {
+        // Delete a word
+        if ( isset( $_POST['word_to_delete'] ) ) {
+            check_admin_referer( 'sswf_save_words', 'sswf_nonce' );
+            $word_to_delete   = sanitize_text_field( $_POST['word_to_delete'] );
             $prohibited_words = get_option( 'sswf_prohibited_words', array() );
-            $word_to_delete = sanitize_text_field( $_POST['word_to_delete'] );
 
-            // Remove word from the list
-            $prohibited_words = array_filter( $prohibited_words, function( $word ) use ( $word_to_delete ) {
-                return $word !== $word_to_delete;
-            });
-            $prohibited_words = array_values( $prohibited_words ); // Reindex array
+            $prohibited_words = array_values(
+                array_filter( $prohibited_words, function( $word ) use ( $word_to_delete ) {
+                    return $word !== $word_to_delete;
+                } )
+            );
+
             update_option( 'sswf_prohibited_words', $prohibited_words );
             echo '<div class="updated"><p>Word or Phrase Removed!</p></div>';
         }
         ?>
 
-        <form method="post" action="">
+        <form method="post">
             <?php wp_nonce_field( 'sswf_save_words', 'sswf_nonce' ); ?>
             <p>
-                <input type="text" name="sswf_word_to_add" id="sswf_word_to_add" class="regular-text" style="width: auto; display: inline-block;" />
+                <input type="text" name="sswf_word_to_add" class="regular-text" />
                 <input type="submit" value="Add to Blocklist" class="button button-primary" />
             </p>
         </form>
@@ -97,7 +101,7 @@ function sswf_settings_page_content() {
                         echo '<tr>';
                         echo '<td>' . esc_html( $word ) . '</td>';
                         echo '<td>
-                                <form method="post" action="">
+                                <form method="post">
                                     ' . wp_nonce_field( 'sswf_save_words', 'sswf_nonce', false, false ) . '
                                     <input type="hidden" name="word_to_delete" value="' . esc_attr( $word ) . '" />
                                     <input type="submit" value="Delete" class="button button-secondary" />
@@ -115,7 +119,7 @@ function sswf_settings_page_content() {
     <?php
 }
 
-// Register the settings
+// Register the settings (optional, since we're handling the form manually)
 function sswf_register_settings() {
     register_setting( 'sswf_options_group', 'sswf_prohibited_words' );
 }
@@ -123,8 +127,8 @@ add_action( 'admin_init', 'sswf_register_settings' );
 
 // Block prohibited words in comments
 function sswf_block_prohibited_words_in_comment( $comment_data ) {
-    $prohibited_words = get_option( 'sswf_prohibited_words', array() );
-    foreach ( $prohibited_words as $word ) {
+    $prohibited = get_option( 'sswf_prohibited_words', array() );
+    foreach ( $prohibited as $word ) {
         if ( stripos( $comment_data['comment_content'], $word ) !== false ) {
             wp_die( 'Your comment contains prohibited words or phrases.' );
         }
@@ -132,16 +136,3 @@ function sswf_block_prohibited_words_in_comment( $comment_data ) {
     return $comment_data;
 }
 add_filter( 'preprocess_comment', 'sswf_block_prohibited_words_in_comment' );
-
-// Block prohibited words in form submissions
-function sswf_block_prohibited_words_in_form_submission( $content ) {
-    $prohibited_words = get_option( 'sswf_prohibited_words', array() );
-    foreach ( $prohibited_words as $word ) {
-        if ( stripos( $content, $word ) !== false ) {
-            wp_die( 'Your form submission contains prohibited words or phrases.' );
-        }
-    }
-    return $content;
-}
-add_filter( 'preprocess_comment', 'sswf_block_prohibited_words_in_form_submission', 10, 2 );
-?>
