@@ -2,10 +2,10 @@
 /*
 Plugin Name: Stupid Simple Word Filter
 Description: Easily manage prohibited words and phrases in Gutenberg comments or forms.
-Version: 1.0.2
+Version: 1.0.3
 Author: Dynamic Technologies
 Author URI: http://bedynamic.tech
-PLugin URI: https://github.com/bedynamictech/Stupid-Simple-Word-Filter
+Plugin URI: https://github.com/bedynamictech/Stupid-Simple-Word-Filter
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 */
@@ -20,9 +20,9 @@ function sswf_add_menu() {
     add_menu_page(
         'Stupid Simple',
         'Stupid Simple',
-        'manage_options',
+        'manage_options',                // fixed capability string
         'stupidsimple',
-        'sswf_settings_page_content',  // ← callback and icon parameters were swapped
+        'sswf_settings_page_content',
         'dashicons-hammer',
         99
     );
@@ -48,7 +48,7 @@ function sswf_settings_page_content() {
         // Add a word
         if ( isset( $_POST['sswf_word_to_add'] ) ) {
             check_admin_referer( 'sswf_save_words', 'sswf_nonce' );
-            $new_word = sanitize_text_field( $_POST['sswf_word_to_add'] );
+            $new_word = sanitize_text_field( wp_unslash( $_POST['sswf_word_to_add'] ) );
             $prohibited_words = get_option( 'sswf_prohibited_words', array() );
 
             if ( $new_word && ! in_array( $new_word, $prohibited_words, true ) ) {
@@ -63,7 +63,7 @@ function sswf_settings_page_content() {
         // Delete a word
         if ( isset( $_POST['word_to_delete'] ) ) {
             check_admin_referer( 'sswf_save_words', 'sswf_nonce' );
-            $word_to_delete   = sanitize_text_field( $_POST['word_to_delete'] );
+            $word_to_delete   = sanitize_text_field( wp_unslash( $_POST['word_to_delete'] ) );
             $prohibited_words = get_option( 'sswf_prohibited_words', array() );
 
             $prohibited_words = array_values(
@@ -119,7 +119,7 @@ function sswf_settings_page_content() {
     <?php
 }
 
-// Register the settings (optional, since we're handling the form manually)
+// Register the settings (optional)
 function sswf_register_settings() {
     register_setting( 'sswf_options_group', 'sswf_prohibited_words' );
 }
