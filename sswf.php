@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Stupid Simple Word Filter
  * Description: Easily manage prohibited words and phrases in Gutenberg comments or forms.
- * Version: 1.0.4
+ * Version: 1.0.5
  * Author: Dynamic Technologies
  * Author URI: https://bedynamic.tech
  * Plugin URI: https://github.com/bedynamictech/Stupid-Simple-Word-Filter
