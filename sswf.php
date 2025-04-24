@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Stupid Simple Word Filter
  * Description: Easily manage prohibited words and phrases in Gutenberg comments or forms.
- * Version: 1.0.5
+ * Version: 1.0.6
  * Author: Dynamic Technologies
  * Author URI: https://bedynamic.tech
  * Plugin URI: https://github.com/bedynamictech/Stupid-Simple-Word-Filter
@@ -13,6 +13,14 @@
 // Prevent direct access
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
+}
+
+// Add Settings link on Plugins page
+add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'sswf_action_links' );
+function sswf_action_links( $links ) {
+    $settings_link = '<a href="' . admin_url( 'admin.php?page=stupid-simple-word-filter' ) . '">Settings</a>';
+    array_unshift( $links, $settings_link );
+    return $links;
 }
 
 // Add admin menu
@@ -135,11 +143,3 @@ function sswf_block_prohibited_words_in_comment( $comment_data ) {
     return $comment_data;
 }
 add_filter( 'preprocess_comment', 'sswf_block_prohibited_words_in_comment' );
-
-// Add Settings link on Plugins page
-add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'sswf_action_links' );
-function sswf_action_links( $links ) {
-    $settings_link = '<a href="' . admin_url( 'admin.php?page=stupid-simple-word-filter' ) . '">Settings</a>';
-    array_unshift( $links, $settings_link );
-    return $links;
-}
